@@ -2,30 +2,31 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../auth/data/services/auth_check_service.dart';
-import '../widgets/splash_logo.dart';
+import '../widgets/brodevs_cyber_text.dart';
+import '../widgets/cyber_particles.dart';
 
-/// Pantalla Splash Screen animada, profesional y optimizada.
+/// Splash Screen profesional, cinematográfico y futurista para Brodevs.
 ///
-/// Ejecuta una secuencia coordinada de 4 fases de animación:
-/// 1. Fade In + Scale del logotipo (aparición).
-/// 2. Slide vertical controlado del logotipo (movimiento).
-/// 3. Fade In + Slide ascendente del nombre de la aplicación (aparición del nombre).
-/// 4. Transición fluida hacia la pantalla destino según el estado de autenticación.
+/// Experiencia visual Cyber Neon 3D ejecutada en 4 fases coordinadas (3000 ms):
+/// 1. Fase 1 (0–500 ms): Fondo oscuro #080D19, resplandor central azul y partículas.
+/// 2. Fase 2 (0–1500 ms): Entrada 3D directa de BRODEVS con perspectiva sobre el eje Y, escala y opacidad.
+/// 3. Fase 3 (1500–2300 ms): Destello horizontal (sheen sweep) y pulso neón.
+/// 4. Fase 4 (2300–3000 ms): Zoom cinematográfico sutil, desvanecimiento y transición a destino.
 class SplashScreen extends StatefulWidget {
-  /// Servicio para verificar el estado de autenticación (extensible para Fase 2).
+  /// Servicio para verificar el estado de autenticación de la sesión.
   final AuthCheckService authCheckService;
 
-  /// Tiempo máximo de seguridad antes de forzar navegación en caso de bloqueo.
+  /// Tiempo máximo de seguridad antes de forzar navegación si la red no responde.
   final Duration timeoutDuration;
 
-  /// Pausa visual tras finalizar las animaciones para que el diseño se aprecie con calma.
-  final Duration settleDuration;
+  /// Duración total de la secuencia cinemática.
+  final Duration animationDuration;
 
   const SplashScreen({
     super.key,
     this.authCheckService = const InitialAuthCheckService(),
-    this.timeoutDuration = const Duration(seconds: 4),
-    this.settleDuration = const Duration(milliseconds: 600),
+    this.timeoutDuration = const Duration(seconds: 5),
+    this.animationDuration = const Duration(milliseconds: 3000),
   });
 
   @override
@@ -36,121 +37,160 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
-  // Animación 1: Aparición y escala del logotipo
-  late final Animation<double> _logoFadeAnimation;
-  late final Animation<double> _logoScaleAnimation;
+  // Fase 1: Fondo y atmósfera (0.0 - 0.167)
+  late final Animation<double> _centerGlowOpacity;
+  late final Animation<double> _particlesOpacity;
 
-  // Animación 2: Movimiento vertical del logotipo
-  late final Animation<Offset> _logoSlideAnimation;
+  // Fase 2: Entrada 3D directa del texto (0.0 - 0.500)
+  late final Animation<double> _textFadeIn;
+  late final Animation<double> _textYRotation;
+  late final Animation<double> _textXTilt;
+  late final Animation<double> _textEntryScale;
 
-  // Animación 3: Aparición y desplazamiento ascendente del nombre
-  late final Animation<double> _titleFadeAnimation;
-  late final Animation<Offset> _titleSlideAnimation;
+  // Fase 3: Iluminación, barrido de destello y pulso neón (0.500 - 0.767)
+  late final Animation<double> _sheenSweep;
+  late final Animation<double> _glowPulse;
 
-  // Indicador de carga discreto
-  late final Animation<double> _loadingFadeAnimation;
+  // Fase 4: Transición y salida suave (0.767 - 1.000)
+  late final Animation<double> _exitScale;
+  late final Animation<double> _exitFadeOut;
 
-  // Control para evitar navegación duplicada o fugas
   bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
     _setupAnimations();
-    _runInitializationSequence();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _runInitializationSequence();
+      }
+    });
   }
 
   void _setupAnimations() {
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: widget.animationDuration,
     );
 
-    // Animación 1 — Fade In y Scale del logotipo
-    _logoFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    // Fase 1 (0–500 ms = 0.0 - 0.167)
+    _centerGlowOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.45, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.167, curve: Curves.easeOut),
       ),
     );
 
-    _logoScaleAnimation = Tween<double>(begin: 0.75, end: 1.0).animate(
+    _particlesOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.50, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.20, curve: Curves.easeIn),
       ),
     );
 
-    // Animación 2 — Movimiento / desplazamiento vertical suave del logotipo
-    _logoSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.20),
-      end: Offset.zero,
-    ).animate(
+    // Fase 2: Entrada 3D directa de BRODEVS (0–1500 ms = 0.0 - 0.500)
+    _textFadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.20, 0.65, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.250, curve: Curves.easeOut),
       ),
     );
 
-    // Animación 3 — Aparición del nombre (Fade In + ligero desplazamiento ascendente)
-    _titleFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    // Rotación sobre eje Y: de -0.55 rad (~ -31.5°) a 0.0 rad (de frente)
+    _textYRotation = Tween<double>(begin: -0.55, end: 0.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.45, 0.85, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.450, curve: Curves.easeOutCubic),
       ),
     );
 
-    _titleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.35),
-      end: Offset.zero,
-    ).animate(
+    // Ligera inclinación X cinemática para profundidad natural
+    _textXTilt = Tween<double>(begin: 0.08, end: 0.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.45, 0.85, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.400, curve: Curves.easeOutCubic),
       ),
     );
 
-    // Indicador discreto al final del proceso
-    _loadingFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _textEntryScale = Tween<double>(begin: 0.80, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.70, 1.0, curve: Curves.easeIn),
+        curve: const Interval(0.0, 0.450, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Fase 3 (1500–2300 ms = 0.500 - 0.767)
+    _sheenSweep = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.500, 0.767, curve: Curves.easeInOutCubic),
+      ),
+    );
+
+    // Pulso neón detrás del logo: 1.0 -> 1.45 -> 1.0
+    _glowPulse = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.45)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50.0,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.45, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 50.0,
+      ),
+    ]).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.500, 0.767),
+      ),
+    );
+
+    // Fase 4 (2300–3000 ms = 0.767 - 1.000)
+    _exitScale = Tween<double>(begin: 1.0, end: 1.06).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.767, 1.000, curve: Curves.easeInCubic),
+      ),
+    );
+
+    _exitFadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.850, 1.000, curve: Curves.easeInOut),
       ),
     );
   }
 
-  /// Ejecuta en paralelo la animación visual y la preparación de recursos/sesión,
-  /// garantizando que la animación se aprecie fluidamente y con un timeout de seguridad.
+  /// Ejecuta en paralelo la animación cinematográfica y la validación de sesión.
   Future<void> _runInitializationSequence() async {
     try {
-      // Inicia la animación
-      final animationFuture = _controller.forward();
+      // En entorno de ejecución real de Android, espera a que el frame sea visible
+      if (WidgetsBinding.instance is WidgetsFlutterBinding) {
+        await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
+      }
 
-      // Prepara recursos iniciales y consulta el estado de sesión
+      if (!mounted) return;
+
+      final animationFuture = _controller.forward(from: 0.0);
       final authFuture = _initializeAndCheckAuth();
 
-      // Espera a que termine la animación estética y la comprobación
       final results = await Future.wait<dynamic>(<Future<dynamic>>[
         animationFuture,
         authFuture,
       ]).timeout(widget.timeoutDuration);
 
-      // Breve pausa para apreciar la identidad visual antes de transicionar
-      if (widget.settleDuration > Duration.zero) {
-        await Future<void>.delayed(widget.settleDuration);
-      }
-
       final authStatus = results[1] as AuthStatus;
       _navigateToNextScreen(authStatus);
     } catch (_) {
-      // Si ocurre un timeout o error no previsto, navega de forma segura a Login
+      // Navegación segura de contingencia en caso de timeout
       if (mounted && !_hasNavigated) {
         _navigateToNextScreen(AuthStatus.unauthenticated);
       }
     }
   }
 
-  /// Inicialización de recursos y consulta de sesión (Fase 1: stub, extensible en Fase 2)
   Future<AuthStatus> _initializeAndCheckAuth() async {
     try {
       return await widget.authCheckService.checkAuthStatus();
@@ -159,23 +199,14 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  /// Animación 4 — Finalización: Transición suave hacia la siguiente pantalla
   void _navigateToNextScreen(AuthStatus status) {
     if (!mounted || _hasNavigated) return;
     _hasNavigated = true;
 
-    final String targetRoute;
-    switch (status) {
-      case AuthStatus.authenticated:
-        targetRoute = AppRouter.home;
-        break;
-      case AuthStatus.unauthenticated:
-      case AuthStatus.sessionExpired:
-        targetRoute = AppRouter.login;
-        break;
-    }
+    final String targetRoute = (status == AuthStatus.authenticated)
+        ? AppRouter.home
+        : AppRouter.login;
 
-    // Navega reemplazando la ruta para que el Splash no permanezca en la pila
     Navigator.of(context).pushReplacementNamed(targetRoute);
   }
 
@@ -187,107 +218,86 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // Paleta coherente con la identidad visual
-    final backgroundGradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: isDark
-          ? const [
-              Color(0xFF140C28),
-              Color(0xFF0B0616),
-            ]
-          : [
-              theme.colorScheme.surface,
-              theme.colorScheme.primaryContainer.withAlpha(80),
-            ],
-    );
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(gradient: backgroundGradient),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Center(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Animación 1 y 2: Logotipo con Fade, Scale y Slide
-                        FadeTransition(
-                          opacity: _logoFadeAnimation,
-                          child: ScaleTransition(
-                            scale: _logoScaleAnimation,
-                            child: SlideTransition(
-                              position: _logoSlideAnimation,
-                              child: const SplashLogo(size: 110.0),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24.0),
+      backgroundColor: const Color(0xFF080D19), // Fondo negro profundo Cyber Neon
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final progress = _controller.value;
 
-                        // Animación 3: Aparición del nombre de la aplicación
-                        FadeTransition(
-                          opacity: _titleFadeAnimation,
-                          child: SlideTransition(
-                            position: _titleSlideAnimation,
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Mi App',
-                                  style: theme.textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.8,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 6.0),
-                                Text(
-                                  'Tu plataforma inteligente',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    letterSpacing: 0.3,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 48.0),
+          // Cálculo del progreso de fases
+          final glowOpacity = disableAnimations ? 1.0 : _centerGlowOpacity.value;
+          final particlesOpacity = disableAnimations ? 0.3 : _particlesOpacity.value;
 
-                        // Indicador de carga discreto
-                        FadeTransition(
-                          opacity: _loadingFadeAnimation,
-                          child: SizedBox(
-                            width: 22.0,
-                            height: 22.0,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                theme.colorScheme.primary.withAlpha(200),
-                              ),
-                            ),
-                          ),
+          // Transformaciones del logo
+          final yRot = disableAnimations ? 0.0 : _textYRotation.value;
+          final xTilt = disableAnimations ? 0.0 : _textXTilt.value;
+          final currentScale = disableAnimations
+              ? 1.0
+              : (_textEntryScale.value * _exitScale.value);
+          final currentOpacity = disableAnimations
+              ? 1.0
+              : (_textFadeIn.value * _exitFadeOut.value);
+
+          // Sheen sweep y pulso en Fase 3
+          final isPhase3 = progress >= 0.500 && progress <= 0.767;
+          final sheenVal = (isPhase3 && !disableAnimations) ? _sheenSweep.value : -1.0;
+          final pulseVal = (isPhase3 && !disableAnimations) ? _glowPulse.value : 1.0;
+
+          return SizedBox.expand(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // 1. Resplandor radial central azul tenue
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: glowOpacity.clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 0.9,
+                          colors: [
+                            const Color(0xFF00F0FF).withValues(alpha: (0.14 * pulseVal).clamp(0.0, 1.0)),
+                            const Color(0xFF0284C7).withValues(alpha: (0.08 * pulseVal).clamp(0.0, 1.0)),
+                            const Color(0xFF080D19).withValues(alpha: 0.0),
+                          ],
+                          stops: const [0.0, 0.45, 1.0],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+
+                // 2. Partículas luminosas sutiles
+                Positioned.fill(
+                  child: CyberParticles(
+                    progress: progress,
+                    opacity: particlesOpacity,
+                  ),
+                ),
+
+                // 3. Texto protagonista central Cyber Neon 3D: BRODEVS
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: BrodevsCyberText(
+                      yRotation: yRot,
+                      xTilt: xTilt,
+                      scale: currentScale,
+                      opacity: currentOpacity,
+                      sheenProgress: sheenVal,
+                      glowPulse: pulseVal,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../app_dependencies.dart';
+import '../../core/config/app_config.dart';
+import '../../core/network/deep_link_service.dart';
+import '../../features/auth/data/services/auth_check_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -14,10 +18,41 @@ class AppRouter {
   static const String profile = '/profile';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    final routeName = settings.name ?? '';
+
+    // Si Flutter intercepta el deep link de retorno de OAuth (/authorize/callback o /discord/callback)
+    if (routeName.startsWith('/authorize/callback') ||
+        routeName.startsWith('/discord/callback') ||
+        routeName.contains('code=') ||
+        routeName.contains('error=')) {
+      final scheme = AppConfig.discordClientId;
+      final fullUriString = (routeName.contains('://') || routeName.contains(':/'))
+          ? routeName
+          : 'discord-$scheme:$routeName';
+      try {
+        final uri = Uri.parse(fullUriString);
+        DeepLinkService().handleIncomingUri(uri);
+      } catch (_) {}
+
+      // Muestra un estado de transición limpio mientras se procesa la autenticación
+      return PageRouteBuilder<dynamic>(
+        settings: settings,
+        opaque: false,
+        transitionDuration: Duration.zero,
+        pageBuilder: (context, _, _) => const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
     switch (settings.name) {
       case splash:
         return _buildFadeRoute(
-          builder: (_) => const SplashScreen(),
+          builder: (_) => SplashScreen(
+            authCheckService: DiscordAuthCheckService(AppDependencies.authRepository),
+          ),
           settings: settings,
         );
 

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mi_app/app/router/app_router.dart';
 import 'package:mi_app/features/auth/data/services/auth_check_service.dart';
 import 'package:mi_app/features/splash/presentation/screens/splash_screen.dart';
-import 'package:mi_app/features/splash/presentation/widgets/splash_logo.dart';
 
 class MockAuthCheckService implements AuthCheckService {
   final AuthStatus statusToReturn;
@@ -38,15 +37,13 @@ void main() {
     );
   }
 
-  testWidgets('SplashScreen muestra SplashLogo y textos principales',
+  testWidgets('SplashScreen muestra el texto central BRODEVS',
       (WidgetTester tester) async {
     final mockAuth = MockAuthCheckService(statusToReturn: AuthStatus.unauthenticated);
 
     await tester.pumpWidget(createTestWidget(authService: mockAuth));
 
-    expect(find.byType(SplashLogo), findsOneWidget);
-    expect(find.text('Mi App'), findsOneWidget);
-    expect(find.text('Tu plataforma inteligente'), findsOneWidget);
+    expect(find.text('BRODEVS'), findsOneWidget);
 
     await tester.pumpAndSettle();
   });
@@ -72,7 +69,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('¡Bienvenido!'), findsOneWidget);
-    expect(find.text('Iniciar sesión con Discord'), findsOneWidget);
+    expect(find.text('Continuar con Discord'), findsOneWidget);
   });
 
   testWidgets('SplashScreen navega a LoginScreen de forma segura ante un error',
