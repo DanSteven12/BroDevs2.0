@@ -57,7 +57,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Inicio'), findsOneWidget);
-    expect(find.text('Bienvenido a Mi App'), findsOneWidget);
+    expect(find.text('Acerca de'), findsOneWidget);
+    expect(find.text('Salir'), findsOneWidget);
+    expect(find.text('Bienvenido a BroDevs'), findsOneWidget);
   });
 
   testWidgets('SplashScreen navega a LoginScreen cuando no está autenticado',
