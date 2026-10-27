@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../app_dependencies.dart';
 import '../../core/config/app_config.dart';
 import '../../core/network/deep_link_service.dart';
+import '../../features/Acercade/acercade_screen.dart';
 import '../../features/auth/data/services/auth_check_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -16,6 +17,7 @@ class AppRouter {
   static const String login = '/login';
   static const String home = '/home';
   static const String profile = '/profile';
+  static const String acercaDe = '/acerca-de';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final routeName = settings.name ?? '';
@@ -71,6 +73,12 @@ class AppRouter {
       case profile:
         return MaterialPageRoute(
           builder: (_) => const ProfileScreen(),
+          settings: settings,
+        );
+
+      case acercaDe:
+        return _buildFadeRoute(
+          builder: (_) => const AcercaDeScreen(),
           settings: settings,
         );
 

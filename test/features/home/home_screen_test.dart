@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mi_app/app/router/app_router.dart';
+import 'package:mi_app/features/Acercade/acercade_screen.dart';
 import 'package:mi_app/features/auth/data/models/discord_user.dart';
 import 'package:mi_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:mi_app/features/auth/presentation/viewmodels/auth_controller.dart';
@@ -43,6 +44,7 @@ void main() {
       initialRoute: AppRouter.home,
       routes: {
         AppRouter.home: (_) => HomeScreen(authController: controller),
+        AppRouter.acercaDe: (_) => AcercaDeScreen(authController: controller),
         AppRouter.login: (_) => LoginScreen(authController: controller),
       },
     );
@@ -67,7 +69,7 @@ void main() {
     expect(find.text('Salir'), findsOneWidget);
   });
 
-  testWidgets('Acerca de en el menú inferior no tiene funcionalidad y mantiene la pantalla de bienvenida',
+  testWidgets('Acerca de en el menú inferior navega a AcercaDeScreen y permite regresar a Inicio',
       (WidgetTester tester) async {
     final mockController = MockHomeAuthController();
 
@@ -78,6 +80,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(mockController.logoutCalled, isFalse);
+    expect(find.text('Universidad Tecnológica de la Selva'), findsOneWidget);
+
+    // Regresar a Inicio desde el menú inferior de Acerca de
+    await tester.tap(find.text('Inicio'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Bienvenido a BroDevs'), findsOneWidget);
   });
 

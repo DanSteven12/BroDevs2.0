@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../../../app/app_dependencies.dart';
-import '../../../../app/router/app_router.dart';
-import '../../../auth/presentation/viewmodels/auth_controller.dart';
+import '../../app/app_dependencies.dart';
+import '../../app/router/app_router.dart';
+import '../auth/presentation/viewmodels/auth_controller.dart';
 
-class HomeScreen extends StatefulWidget {
+class AcercaDeScreen extends StatefulWidget {
   final AuthController? authController;
 
-  const HomeScreen({
+  const AcercaDeScreen({
     super.key,
     this.authController,
   });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<AcercaDeScreen> createState() => _AcercaDeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _AcercaDeScreenState extends State<AcercaDeScreen> {
   late final AuthController _controller;
   bool _isLoggingOut = false;
 
@@ -235,6 +235,51 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: isDark
+                  ? Colors.white.withAlpha(20)
+                  : Colors.black.withAlpha(15),
+              width: 1,
+            ),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: 1,
+          onDestinationSelected: (index) {
+            if (index == 0) {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                Navigator.of(context).pushReplacementNamed(AppRouter.home);
+              }
+            } else if (index == 2) {
+              _handleLogout();
+            }
+          },
+          destinations: [
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home_rounded),
+              label: 'Inicio',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.info_outline_rounded),
+              selectedIcon: Icon(Icons.info_rounded),
+              label: 'Acerca de',
+            ),
+            NavigationDestination(
+              icon: Icon(
+                Icons.logout_rounded,
+                color: theme.colorScheme.error,
+              ),
+              label: 'Salir',
+            ),
+          ],
         ),
       ),
     );

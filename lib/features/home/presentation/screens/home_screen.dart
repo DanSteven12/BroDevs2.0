@@ -44,8 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _selectedIndex = 0;
       });
     } else if (index == 1) {
-      // Acerca de: sin funcionalidad, solo presencia visual en el menú
-      return;
+      // Acerca de: navegar a la vista AcercaDeScreen
+      Navigator.of(context).pushNamed(AppRouter.acercaDe);
     } else if (index == 2) {
       // Salir: cerrar sesión y volver al Login
       _handleLogout();
