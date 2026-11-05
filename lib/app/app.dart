@@ -14,6 +14,7 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       initialRoute: AppRouter.splash,
       onGenerateRoute: AppRouter.onGenerateRoute,
+      navigatorObservers: [AppRouter.routeObserver],
     );
   }
 }

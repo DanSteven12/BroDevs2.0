@@ -13,6 +13,9 @@ import '../../features/splash/presentation/screens/splash_screen.dart';
 class AppRouter {
   AppRouter._();
 
+  /// Observador central de rutas para monitorear visibilidad de pantallas y ciclo de vida de anuncios.
+  static final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
   static const String splash = '/';
   static const String login = '/login';
   static const String home = '/home';

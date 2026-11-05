@@ -1,33 +1,114 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import '../../../../app/app_dependencies.dart';
 import '../../../../app/router/app_router.dart';
+import '../../../../core/services/admob_pip_service.dart';
 import '../../../auth/presentation/viewmodels/auth_controller.dart';
 
 /// Pantalla principal que contiene la página de bienvenida (Inicio)
 /// y el menú de navegación inferior con Inicio, Acerca de (solo diseño) y Salir (cerrar sesión).
 class HomeScreen extends StatefulWidget {
   final AuthController? authController;
+  final AdmobPipService? pipService;
 
   const HomeScreen({
     super.key,
     this.authController,
+    this.pipService,
   });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   late final AuthController _controller;
   int _selectedIndex = 0;
+
+  // ── AdMob PiP ────────────────────────────────────────────────────────────
+  /// Servicio que gestiona el ciclo de vida del anuncio Picture-in-Picture.
+  AdmobPipService? _pipService;
+
+  /// Indica si HomeScreen es actualmente la ruta visible en primer plano.
+  bool _isCurrentRoute = true;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.authController ?? AppDependencies.authController;
+    _initAdmob();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final modalRoute = ModalRoute.of(context);
+    if (modalRoute != null) {
+      AppRouter.routeObserver.subscribe(this, modalRoute);
+    }
+  }
+
+  /// Inicializa AdMob y carga el anuncio PiP (en Android o si se inyecta en tests).
+  Future<void> _initAdmob() async {
+    if (widget.pipService == null && defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+    final service = widget.pipService ?? AdmobPipService();
+    _pipService = service;
+    await service.initialize();
+    if (!mounted) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await service.loadAd();
+      if (mounted && _isCurrentRoute && service.isAdLoaded) {
+        await service.showAd();
+      }
+    });
+  }
+
+  // ── RouteAware Callbacks ──────────────────────────────────────────────────
+
+  @override
+  void didPush() {
+    _isCurrentRoute = true;
+  }
+
+  @override
+  void didPushNext() {
+    // Se navegó a otra pantalla (ej. Perfil o Acerca de) sobre HomeScreen.
+    // Ocultamos el anuncio para que no flote sobre la nueva vista.
+    _isCurrentRoute = false;
+    _pipService?.hideAd();
+  }
+
+  @override
+  void didPopNext() {
+    // Se regresó a HomeScreen desde otra pantalla.
+    // Restauramos la visibilidad del anuncio sin recargarlo.
+    _isCurrentRoute = true;
+    if (_pipService != null && _pipService!.isAdLoaded) {
+      _pipService!.showAd();
+    }
+  }
+
+  @override
+  void didPop() {
+    _isCurrentRoute = false;
+    _pipService?.disposeAd();
+  }
+
+  @override
+  void dispose() {
+    AppRouter.routeObserver.unsubscribe(this);
+    // Libera el anuncio PiP para que no persista en otras pantallas.
+    _pipService?.disposeAd();
+    _pipService?.dispose();
+    super.dispose();
   }
 
   Future<void> _handleLogout() async {
+    _pipService?.disposeAd();
     await _controller.logout();
     if (!mounted) return;
 
